@@ -27,12 +27,10 @@ import android.provider.Telephony.Sms.Conversations;
 import android.provider.Telephony.Threads;
 import android.provider.Telephony.ThreadsColumns;
 import android.telephony.PhoneNumberUtils;
-import android.telephony.SubscriptionManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.android.internal.telephony.PhoneConstants;
 import com.android.mms.LogTag;
 import com.android.mms.MmsApp;
 import com.android.mms.R;
@@ -794,9 +792,8 @@ public class Conversation {
      * @param handler An AsyncQueryHandler that will receive onQueryComplete
      *                upon completion of the query
      * @param token   The token that will be passed to onQueryComplete
-     * @param subId msim subscription id
      */
-    public static void startQueryForAll(AsyncQueryHandler handler, int token, Integer subId) {
+    public static void startQueryForAll(AsyncQueryHandler handler, int token) {
         handler.cancelOperation(token);
 
         // This query looks like this in the log:
@@ -804,7 +801,7 @@ public class Conversation {
         // mmssms.db|2.253 ms|SELECT _id, date, message_count, recipient_ids, snippet, snippet_cs,
         // read, error, has_attachment FROM threads ORDER BY  date DESC
 
-        startQuery(handler, token, null, subId);
+        startQuery(handler, token, null);
     }
 
     /**
@@ -815,10 +812,8 @@ public class Conversation {
      *                upon completion of the query
      * @param token   The token that will be passed to onQueryComplete
      * @param selection   A where clause (can be null) to select particular conv items.
-     * @param subId msim subscription id
      */
-    public static void startQuery(AsyncQueryHandler handler,
-                                  int token, String selection, Integer subId) {
+    public static void startQuery(AsyncQueryHandler handler, int token, String selection) {
         handler.cancelOperation(token);
 
         // This query looks like this in the log:
@@ -826,12 +821,7 @@ public class Conversation {
         // mmssms.db|2.253 ms|SELECT _id, date, message_count, recipient_ids, snippet, snippet_cs,
         // read, error, has_attachment FROM threads ORDER BY  date DESC
 
-        Uri uri = sAllThreadsUri;
-        if (subId != null) {
-            uri = sAllThreadsUri.buildUpon()
-                    .appendQueryParameter("sub_id", String.valueOf(subId)).build();
-        }
-        handler.startQuery(token, null, uri,
+        handler.startQuery(token, null, sAllThreadsUri,
                 ALL_THREADS_PROJECTION, selection, null, Conversations.DEFAULT_SORT_ORDER);
     }
 
