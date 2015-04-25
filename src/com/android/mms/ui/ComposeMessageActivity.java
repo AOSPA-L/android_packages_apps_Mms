@@ -54,6 +54,7 @@ import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.app.Service;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.ClipData;
@@ -145,7 +146,6 @@ import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.RILConstants;
 import com.android.internal.telephony.TelephonyIntents;
 import com.android.internal.telephony.TelephonyProperties;
-import com.android.internal.telephony.util.BlacklistUtils;
 import com.android.mms.LogTag;
 import com.android.mms.MmsApp;
 import com.android.mms.MmsConfig;
@@ -260,14 +260,7 @@ public class ComposeMessageActivity extends Activity
     private static final int MENU_COPY_TO_SIM           = 34;
     private static final int MENU_RESEND                = 35;
     private static final int MENU_COPY_EXTRACT_URL      = 36;
-    private static final int MENU_ADD_TO_BLACKLIST      = 37;
-    private static final int MENU_CONVERSATION_OPTIONS  = 38;
-
-    private static final int DIALOG_TEMPLATE_SELECT     = 1;
-    private static final int DIALOG_TEMPLATE_NOT_AVAILABLE = 2;
-    private static final int LOAD_TEMPLATE_BY_ID        = 0;
-    private static final int LOAD_TEMPLATES             = 1;
-
+    private static final int MENU_CONVERSATION_OPTIONS  = 37;
 
     private static final int RECIPIENTS_MAX_LENGTH = 312;
 
@@ -3033,12 +3026,6 @@ public class ComposeMessageActivity extends Activity
 
         buildAddAddressToContactMenuItem(menu);
 
-        // Add to Blacklist item (if enabled)
-        if (BlacklistUtils.isBlacklistEnabled(this)) {
-            menu.add(0, MENU_ADD_TO_BLACKLIST, 0, R.string.add_to_blacklist)
-                    .setIcon(R.drawable.ic_block_message_holo_dark)
-                    .setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
-        }
 
         if (mConversation.getThreadId() > 0) {
             menu.add(0, MENU_CONVERSATION_OPTIONS, 0, R.string.menu_conversation_options);
@@ -3200,9 +3187,6 @@ public class ComposeMessageActivity extends Activity
                 Conversation.dump();
                 LogTag.dumpInternalTables(this);
                 break;
-            case MENU_ADD_TO_BLACKLIST:
-                confirmAddBlacklist();
-                break;
         }
 
         return true;
@@ -3287,32 +3271,6 @@ public class ComposeMessageActivity extends Activity
             }
         }
 
-    }
-
-    /**
-     *  Pop up a dialog confirming adding the current number to the blacklist
-     */
-    private void confirmAddBlacklist() {
-        //TODO: get the sender number
-        final String number = getSenderNumber();
-        if (TextUtils.isEmpty(number)) {
-            return;
-        }
-
-        // Show dialog
-        final String message = getString(R.string.add_to_blacklist_message, number);
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.add_to_blacklist)
-                .setMessage(message)
-                .setPositiveButton(R.string.alert_dialog_yes, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        BlacklistUtils.addOrUpdate(getApplicationContext(), number,
-                                BlacklistUtils.BLOCK_MESSAGES, BlacklistUtils.BLOCK_MESSAGES);
-                    }
-                })
-                .setNegativeButton(R.string.alert_dialog_no, null)
-                .show();
     }
 
     private String getSenderNumber() {
