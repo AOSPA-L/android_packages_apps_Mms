@@ -191,6 +191,7 @@ public class MailBoxMessageList extends ListActivity implements
         mQueryHandler = new BoxMsgListQueryHandler(getContentResolver());
         setContentView(R.layout.mailbox_list_screen);
         mSpinners = (View) findViewById(R.id.spinners);
+        initSpinner();
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setActionBar(toolbar);
@@ -451,6 +452,67 @@ public class MailBoxMessageList extends ListActivity implements
             return TYPE_OUTBOX -1;
         }
         return mailBoxId - 1;
+    }
+
+    private void initSpinner() {
+        final SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        mBoxSpinner = (Spinner) findViewById(R.id.box_spinner);
+        mSlotSpinner = (Spinner) findViewById(R.id.slot_spinner);
+        mBoxSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                int oldQueryType = mQueryBoxType;
+                // position 0-3 means box: inbox, sent, draft, outbox
+                mQueryBoxType = position + 1;
+                if (mQueryBoxType > TYPE_OUTBOX) {
+                    mQueryBoxType = TYPE_OUTBOX;
+                }
+                if (oldQueryType != mQueryBoxType) {
+                    if (mQueryBoxType == TYPE_DRAFTBOX) {
+                        mQuerySubId = SubscriptionManager.DEFAULT_SUBSCRIPTION_ID;
+                        //mSlotSpinner.setSelection(TYPE_ALL_SLOT);
+                        mSlotSpinner.setEnabled(false);
+                    } else {
+                        mSlotSpinner.setEnabled(true);
+                    }
+                    startAsyncQuery();
+                    getListView().invalidateViews();
+                }
+                sp.edit().putInt(BOX_SPINNER_TYPE, mQueryBoxType).commit();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> arg0) {
+                // do nothing
+            }
+        });
+
+        if (MessageUtils.isMsimIccCardActive()) {
+            MSimSpinnerAdapter adapter = new MSimSpinnerAdapter(mSlotSpinner.getContext());
+            mSlotSpinner.setAdapter(adapter);
+            //mSlotSpinner.setSelection(sp.getInt(SLOT_SPINNER_TYPE, TYPE_ALL_SLOT));
+            mSlotSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent,
+                                           View view, int position, long id) {
+                    //sp.edit().putInt(SUB_SPINNER_TYPE, position).commit();
+                    if (id != mQuerySubId) {
+                        mQuerySubId = (int) id;
+                        startAsyncQuery();
+                        getListView().invalidateViews();
+                    }
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> arg0) {
+                    // do nothing
+                }
+            });
+            getLoaderManager().initLoader(0, null,
+                    new MSimSpinnerAdapter.LoaderCallbacks(adapter));
+        } else {
+            mSlotSpinner.setVisibility(View.GONE);
+        }
     }
 
     private void startAsyncQuery() {
