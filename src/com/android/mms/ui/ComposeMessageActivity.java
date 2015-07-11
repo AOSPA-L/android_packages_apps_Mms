@@ -262,6 +262,12 @@ public class ComposeMessageActivity extends Activity
     private static final int MENU_COPY_EXTRACT_URL      = 36;
     private static final int MENU_CONVERSATION_OPTIONS  = 37;
 
+    private static final int DIALOG_TEMPLATE_SELECT     = 1;
+    private static final int DIALOG_TEMPLATE_NOT_AVAILABLE = 2;
+    private static final int LOAD_TEMPLATE_BY_ID        = 0;
+    private static final int LOAD_TEMPLATES             = 1;
+
+
     private static final int RECIPIENTS_MAX_LENGTH = 312;
 
     private static final int MESSAGE_LIST_QUERY_TOKEN = 9527;
@@ -3042,7 +3048,7 @@ public class ComposeMessageActivity extends Activity
     }
 
     private void buildAddAddressToContactMenuItem(Menu menu) {
-        // bug #7087793: for group of recipients, remove "Add to People" action. Rely on
+        // bug #7087793: for group of recipients, remove "Add to Contacts" action. Rely on
         // individually creating contacts for unknown phone numbers by touching the individual
         // sender's avatars, one at a time
         ContactList contacts = getRecipients();
@@ -3667,13 +3673,6 @@ public class ComposeMessageActivity extends Activity
             ArrayList<String> numbers = params[0];
 
             ContactList list = ContactList.getByNumbers(numbers, true);
-            ContactList existing = mRecipientsEditor.constructContactsFromInput(true);
-            for (Contact contact : existing) {
-                if (!contact.existsInDatabase()) {
-                    list.add(contact);
-                }
-            }
-
             mRecipientsEditor.populate(list);
             return null;
         }
@@ -3877,6 +3876,11 @@ public class ComposeMessageActivity extends Activity
                     title = res.getString(R.string.illegal_message_or_increase_size);
                     message = res.getString(R.string.failed_to_add_media, mediaType);
                     break;
+                case WorkingMessage.FAILED_TO_QUERY_CONTACT:
+                    title = res.getString(R.string.attach_add_contact_as_vcard);
+                    message = res.getString(R.string.failed_to_add_media, title);
+                    Toast.makeText(ComposeMessageActivity.this, message, Toast.LENGTH_SHORT).show();
+                    return;
                 default:
                     throw new IllegalArgumentException("unknown error " + error);
                 }
@@ -5368,7 +5372,8 @@ public class ComposeMessageActivity extends Activity
                 ComposeMessageActivity.this.mMsgListAdapter.notifyDataSetChanged();
 
                 if (mRecipientsEditor != null && (mAddNumbersTask == null ||
-                        mAddNumbersTask.getStatus() != AsyncTask.Status.RUNNING)) {
+                        mAddNumbersTask.getStatus() != AsyncTask.Status.RUNNING) && updated
+                        .getPersonId() != 0) {
                     mRecipientsEditor.populate(recipients);
                 }
             }
@@ -5730,10 +5735,8 @@ public class ComposeMessageActivity extends Activity
             String body = c.getString(COLUMN_SMS_BODY);
             Intent shareIntent = getShareMessageIntent(body);
             Context ctx = getContext();
-            Intent chooserIntent =
-                    IntentUtils.createFilteredChooser(
-                            ctx, ctx.getString(R.string.message_share_intent_title),
-                            shareIntent, ctx.getPackageName());
+            Intent chooserIntent = Intent.createChooser(shareIntent,
+                    ctx.getString(R.string.message_share_intent_title));
             try {
                 startActivity(chooserIntent);
             } catch (ActivityNotFoundException e) {
@@ -5769,11 +5772,15 @@ public class ComposeMessageActivity extends Activity
                 Cursor c = (Cursor) getListView().getAdapter().getItem(pos);
                 String type = c.getString(COLUMN_MSG_TYPE);
                 if (type.equals("mms")) {
-                    sBuilder.append(mMsgListAdapter.getCachedBodyForPosition(pos));
+                    CharSequence value = mMsgListAdapter.getCachedBodyForPosition(pos);
+                    if(!TextUtils.isEmpty(value)) {
+                        sBuilder.append(value);
+                        sBuilder.append(LINE_BREAK);
+                    }
                 } else {
                     sBuilder.append(c.getString(COLUMN_SMS_BODY));
-                }
                 sBuilder.append(LINE_BREAK);
+                }
             }
             if (!TextUtils.isEmpty(sBuilder.toString())) {
                 copyToClipboard(sBuilder.toString());

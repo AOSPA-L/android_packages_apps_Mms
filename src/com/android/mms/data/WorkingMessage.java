@@ -118,6 +118,7 @@ public class WorkingMessage {
     public static final int UNSUPPORTED_TYPE = -3;
     public static final int IMAGE_TOO_LARGE = -4;
     public static final int NEGATIVE_MESSAGE_OR_INCREASE_SIZE = -5;
+    public static final int FAILED_TO_QUERY_CONTACT = -6;
 
     // Attachment types
     public static final int TEXT = 0;

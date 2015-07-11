@@ -513,6 +513,7 @@ public class MailBoxMessageList extends ListActivity implements
         } else {
             mSlotSpinner.setVisibility(View.GONE);
         }
+
     }
 
     private void startAsyncQuery() {
