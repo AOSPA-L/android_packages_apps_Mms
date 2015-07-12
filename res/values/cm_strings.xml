@@ -66,6 +66,7 @@
     <!-- Context menu item on a message for marking all threads as unread / read -->
     <string name="menu_all_as_unread">Mark all as unread</string>
     <string name="menu_all_as_read">Mark all as read</string>
+    <string name="menu_add_to_contacts">Add to Contacts</string>
     <!-- Confirm Mark as unread / read -->
     <string name="confirm_mark_unread_dialog_title">Mark as unread?</string>
     <string name="confirm_mark_unread_conversation">The conversation will be marked as unread.</string>
@@ -90,6 +91,8 @@
     <string name="message_share_intent_title">Share message</string>
 
     <string name="start_new_message_button">New message</string>
+
+    <string name="all_spinner_option">All</string>
 
     <string name="menu_copy_url">Copy URL <xliff:g id="extractedurl">%s</xliff:g></string>
 

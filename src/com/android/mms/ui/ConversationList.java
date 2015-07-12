@@ -248,6 +248,7 @@ public class ConversationList extends ListActivity implements DraftCache.OnDraft
         }
 
         setupFilterSpinner();
+
         View actionButton = findViewById(R.id.floating_action_button);
         actionButton.setOnClickListener(mComposeClickHandler);
     }
@@ -360,6 +361,7 @@ public class ConversationList extends ListActivity implements DraftCache.OnDraft
             mFilterSpinner.setVisibility(View.GONE);
         }
     }
+
     private final ConversationListAdapter.OnContentChangedListener mContentChangedListener =
         new ConversationListAdapter.OnContentChangedListener() {
         @Override
@@ -1408,7 +1410,9 @@ public class ConversationList extends ListActivity implements DraftCache.OnDraft
             MenuInflater inflater = getMenuInflater();
             mSelectedThreadIds = new HashSet<Long>();
             inflater.inflate(R.menu.conversation_multi_select_menu, menu);
-
+            if(mFilterSpinner.getVisibility() == View.VISIBLE){
+                mFilterSpinner.setEnabled(false);
+            }
             return true;
         }
 
@@ -1463,6 +1467,9 @@ public class ConversationList extends ListActivity implements DraftCache.OnDraft
             ConversationListAdapter adapter = (ConversationListAdapter)getListView().getAdapter();
             adapter.uncheckAll();
             mSelectedThreadIds = null;
+            if(mFilterSpinner.getVisibility() == View.VISIBLE){
+                mFilterSpinner.setEnabled(true);
+            }
         }
 
         @Override
